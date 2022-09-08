@@ -1,3 +1,5 @@
+This is a fork of https://github.com/te-online/timemanager
+
 # TimeManager App
 
 A Nextcloud app to track time spent on work, life or anything in-between.
