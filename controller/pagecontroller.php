@@ -95,6 +95,9 @@ class PageController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	function index(string $userFilter = "") {
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
+			return;
+
 		// Find the latest time entries
 		$times = $this->timeMapper->findActiveForCurrentUser("start", true, "DESC");
 		$all_clients = $this->clientMapper->findActiveForCurrentUser("name", true);
@@ -168,7 +171,10 @@ class PageController extends Controller {
 		string $end = "",
 		string $format = "none",
 		string $userFilter = ""
-	) {
+	) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
+			return;
+
 		$start_of_month = new \DateTime("first day of this month");
 		$end_of_month = new \DateTime("last day of this month");
 		// Fall back to default if date is invalid
@@ -323,7 +329,10 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function clients() {
+	function clients() {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
+			return;
+
 		$clients = $this->clientMapper->findActiveForCurrentUser("name", true);
 
 		$urlGenerator = \OC::$server->getURLGenerator();
@@ -483,7 +492,10 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function projects($client = null) {
+	function projects($client = null) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
+			return;
+
 		$clients = $this->clientMapper->findActiveForCurrentUser("created", true);
 		$isSingleClient = false;
 		if ($client) {
@@ -671,6 +683,9 @@ class PageController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	function tasks($project) {
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
+			return;
+
 		$clients = $this->clientMapper->findActiveForCurrentUser("created", true);
 		$projects = $this->projectMapper->findActiveForCurrentUser("created", true);
 		$sharedBy = null;
@@ -871,6 +886,9 @@ class PageController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	function times($task, string $userFilter = "") {
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
+			return;
+			
 		$clients = $this->clientMapper->findActiveForCurrentUser("created", true);
 		$projects = $this->projectMapper->findActiveForCurrentUser("created", true);
 		$tasks = $this->taskMapper->findActiveForCurrentUser("created", true);
