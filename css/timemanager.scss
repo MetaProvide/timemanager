@@ -642,6 +642,11 @@ label {
 			}
 		}
 	}
+
+	#app-navigation {
+		top: 56px;
+		height: calc(100% - 56px);
+	}
 }
 
 .oc-dialog-buttonrow.reverse {
