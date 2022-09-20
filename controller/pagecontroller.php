@@ -22,6 +22,7 @@ use OCP\AppFramework\Http\RedirectResponse;
 use OCP\IRequest;
 use OCP\IConfig;
 use OCP\IUserManager;
+use OCP\IURLGenerator;
 
 class PageController extends Controller {
 	/** @var ClientMapper mapper for client entity */
@@ -44,6 +45,8 @@ class PageController extends Controller {
 	private $config;
 	/** @var IUserManager */
 	private $userManager;
+	/** @var IURLGenerator */
+	private $urlGenerator;
 
 	/**
 	 * constructor of the controller
@@ -66,6 +69,7 @@ class PageController extends Controller {
 		ShareMapper $shareMapper,
 		IConfig $config,
 		IUserManager $userManager,
+		IURLGenerator $urlGenerator,
 		$userId
 	) {
 		parent::__construct($appName, $request);
@@ -78,6 +82,7 @@ class PageController extends Controller {
 		$this->userId = $userId;
 		$this->config = $config;
 		$this->userManager = $userManager;
+		$this->urlGenerator = $urlGenerator;
 		$this->storageHelper = new StorageHelper(
 			$this->clientMapper,
 			$this->projectMapper,
@@ -95,13 +100,17 @@ class PageController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	function index(string $userFilter = "") {
+		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))		
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
+
 		// Find the latest time entries
 		$times = $this->timeMapper->findActiveForCurrentUser("start", true, "DESC");
 		$all_clients = $this->clientMapper->findActiveForCurrentUser("name", true);
 		$all_projects = $this->projectMapper->findActiveForCurrentUser("name", true);
 		$all_tasks = $this->taskMapper->findActiveForCurrentUser("name", true);
 
-		$urlGenerator = \OC::$server->getURLGenerator();
+		
 		$requestToken = \OC::$server->getSession() ? \OCP\Util::callRegister() : "";
 
 		$times = $this->storageHelper->resolveAuthorDisplayNamesForTimes($times, $this->userManager);
@@ -141,9 +150,9 @@ class PageController extends Controller {
 					return ["value" => $oneTask["uuid"], "label" => $oneTask["name"], "projectUuid" => $oneTask["project_uuid"]];
 				}, $all_tasks),
 				"initialDate" => date("Y-m-d"),
-				"action" => $urlGenerator->linkToRoute("timemanager.page.times"),
-				"statsApiUrl" => $urlGenerator->linkToRoute("timemanager.t_api.getHoursInPeriodStats"),
-				"settingsAction" => $urlGenerator->linkToRoute("timemanager.page.updateSettings"),
+				"action" => $this->urlGenerator->linkToRoute("timemanager.page.times"),
+				"statsApiUrl" => $this->urlGenerator->linkToRoute("timemanager.t_api.getHoursInPeriodStats"),
+				"settingsAction" => $this->urlGenerator->linkToRoute("timemanager.page.updateSettings"),
 				"settings" => [
 					"handle_conflicts" =>
 						$this->config->getAppValue("timemanager", "sync_mode", "force_skip_conflict_handling") ===
@@ -168,7 +177,10 @@ class PageController extends Controller {
 		string $end = "",
 		string $format = "none",
 		string $userFilter = ""
-	) {
+	) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
+
 		$start_of_month = new \DateTime("first day of this month");
 		$end_of_month = new \DateTime("last day of this month");
 		// Fall back to default if date is invalid
@@ -260,7 +272,7 @@ class PageController extends Controller {
 			// Download as CSV
 			return new DataDownloadResponse(ArrayToCSV::convert($all_time_entries), $filename, "text/csv");
 		} else {
-			$urlGenerator = \OC::$server->getURLGenerator();
+			
 			$requestToken = \OC::$server->getSession() ? \OCP\Util::callRegister() : "";
 
 			$store = [
@@ -281,8 +293,8 @@ class PageController extends Controller {
 					return ["value" => $oneTask["uuid"], "label" => $oneTask["name"], "projectUuid" => $oneTask["project_uuid"]];
 				}, $all_tasks),
 				"initialDate" => date("Y-m-d"),
-				"action" => $urlGenerator->linkToRoute("timemanager.page.reports"),
-				"statsApiUrl" => $urlGenerator->linkToRoute("timemanager.t_api.getHoursInPeriodStats"),
+				"action" => $this->urlGenerator->linkToRoute("timemanager.page.reports"),
+				"statsApiUrl" => $this->urlGenerator->linkToRoute("timemanager.t_api.getHoursInPeriodStats"),
 				"requestToken" => $requestToken,
 				"isServer" => true,
 				"startOfMonth" => $start_of_month->format("Y-m-d"),
@@ -290,7 +302,7 @@ class PageController extends Controller {
 				"start" => $start,
 				"end" => $end,
 				"controls" => false,
-				"settingsAction" => $urlGenerator->linkToRoute("timemanager.page.updateSettings"),
+				"settingsAction" => $this->urlGenerator->linkToRoute("timemanager.page.updateSettings"),
 				"settings" => [
 					"handle_conflicts" =>
 						$this->config->getAppValue("timemanager", "sync_mode", "force_skip_conflict_handling") ===
@@ -323,15 +335,18 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function clients() {
+	function clients() {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
+
 		$clients = $this->clientMapper->findActiveForCurrentUser("name", true);
 
-		$urlGenerator = \OC::$server->getURLGenerator();
+		
 		$requestToken = \OC::$server->getSession() ? \OCP\Util::callRegister() : "";
 		$l = \OC::$server->getL10N("timemanager");
 
 		$form_props = [
-			"action" => $urlGenerator->linkToRoute("timemanager.page.clients"),
+			"action" => $this->urlGenerator->linkToRoute("timemanager.page.clients"),
 			"requestToken" => $requestToken,
 			"isServer" => true,
 		];
@@ -360,8 +375,8 @@ class PageController extends Controller {
 		}
 
 		$form_props = [
-			"action" => $urlGenerator->linkToRoute("timemanager.page.clients"),
-			"settingsAction" => $urlGenerator->linkToRoute("timemanager.page.updateSettings"),
+			"action" => $this->urlGenerator->linkToRoute("timemanager.page.clients"),
+			"settingsAction" => $this->urlGenerator->linkToRoute("timemanager.page.updateSettings"),
 			"settings" => [
 				"handle_conflicts" =>
 					$this->config->getAppValue("timemanager", "sync_mode", "force_skip_conflict_handling") === "handle_conflicts",
@@ -384,7 +399,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function addClient($name = "Unnamed", $note = "") {
+	function addClient($name = "Unnamed", $note = "") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		$this->storageHelper->addOrUpdateObject(
@@ -395,14 +412,16 @@ class PageController extends Controller {
 			],
 			"clients"
 		);
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.clients"));
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.clients"));
 	}
 
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteClient($uuid) {
+	function deleteClient($uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		// Get client
@@ -416,14 +435,16 @@ class PageController extends Controller {
 		// Delete children
 		$this->clientMapper->deleteChildrenForEntityById($uuid, $commit);
 
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.clients"));
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.clients"));
 	}
 
 	/**
 	 * @NoAdminRequired
 	 */
-	function editClient($uuid, $name = "Unnamed", $note = "") {
+	function editClient($uuid, $name = "Unnamed", $note = "") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$client = $this->clientMapper->getActiveObjectById($uuid);
 		if ($client) {
@@ -439,14 +460,16 @@ class PageController extends Controller {
 				"clients"
 			);
 		}
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $uuid);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $uuid);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 */
-	function addClientShare($client_uuid, $user_id) {
+	function addClientShare($client_uuid, $user_id) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$client = $this->clientMapper->getActiveObjectById($client_uuid);
 		// User must be author if we can get the client
 		if ($client) {
@@ -462,28 +485,33 @@ class PageController extends Controller {
 			$this->shareMapper->insert($share);
 		}
 
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client_uuid);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client_uuid);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteClientShare($uuid, $client_uuid) {
+	function deleteClientShare($uuid, $client_uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$shares = $this->shareMapper->findByUuid($uuid);
 		if (count($shares) > 0) {
 			$this->shareMapper->delete($shares[0]);
 		}
 
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client_uuid);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client_uuid);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function projects($client = null) {
+	function projects($client = null) {				
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
+
 		$clients = $this->clientMapper->findActiveForCurrentUser("created", true);
 		$isSingleClient = false;
 		if ($client) {
@@ -531,7 +559,7 @@ class PageController extends Controller {
 			}
 		}
 
-		$urlGenerator = \OC::$server->getURLGenerator();
+		
 		$requestToken = \OC::$server->getSession() ? \OCP\Util::callRegister() : "";
 		$l = \OC::$server->getL10N("timemanager");
 
@@ -551,9 +579,9 @@ class PageController extends Controller {
 		}
 
 		$form_props = [
-			"action" => $urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client_uuid,
-			"editAction" => $urlGenerator->linkToRoute("timemanager.page.clients"),
-			"settingsAction" => $urlGenerator->linkToRoute("timemanager.page.updateSettings"),
+			"action" => $this->urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client_uuid,
+			"editAction" => $this->urlGenerator->linkToRoute("timemanager.page.clients"),
+			"settingsAction" => $this->urlGenerator->linkToRoute("timemanager.page.updateSettings"),
 			"settings" => [
 				"handle_conflicts" =>
 					$this->config->getAppValue("timemanager", "sync_mode", "force_skip_conflict_handling") === "handle_conflicts",
@@ -569,15 +597,15 @@ class PageController extends Controller {
 				"name" => $client_name,
 				"note" => isset($client_data) && count($client_data) > 0 ? $client_data[0]->getNote() : "",
 			],
-			"deleteAction" => $urlGenerator->linkToRoute("timemanager.page.clients") . "/delete",
+			"deleteAction" => $this->urlGenerator->linkToRoute("timemanager.page.clients") . "/delete",
 			"deleteUuid" => $client_uuid,
 			"deleteButtonCaption" => $l->t("Delete client"),
 			"deleteQuestion" => $l->t(
 				"Do you want to delete the client %s and all associated projects, tasks and time entries?",
 				[$client_name]
 			),
-			"shareAction" => $urlGenerator->linkToRoute("timemanager.page.clients") . "/share",
-			"deleteShareAction" => $urlGenerator->linkToRoute("timemanager.page.clients") . "/share/delete",
+			"shareAction" => $this->urlGenerator->linkToRoute("timemanager.page.clients") . "/share",
+			"deleteShareAction" => $this->urlGenerator->linkToRoute("timemanager.page.clients") . "/share/delete",
 			"sharees" => $sharees,
 			"sharedBy" => $sharedBy,
 			"canEdit" => $sharedBy === null,
@@ -605,7 +633,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function addProject($name, $client) {
+	function addProject($name, $client) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		$this->storageHelper->addOrUpdateObject(
@@ -616,14 +646,16 @@ class PageController extends Controller {
 			],
 			"projects"
 		);
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteProject($uuid, $client) {
+	function deleteProject($uuid, $client) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		// Get client
@@ -640,14 +672,16 @@ class PageController extends Controller {
 			$this->projectMapper->deleteChildrenForEntityById($uuid, $commit);
 		}
 
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.projects") . "?client=" . $client);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 */
-	function editProject($uuid, $name = "Unnamed") {
+	function editProject($uuid, $name = "Unnamed") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$project = $this->projectMapper->getActiveObjectById($uuid);
 		if ($project) {
@@ -662,15 +696,18 @@ class PageController extends Controller {
 				"projects"
 			);
 		}
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.tasks") . "?project=" . $uuid);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.tasks") . "?project=" . $uuid);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function tasks($project) {
+	function tasks($project) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
+
 		$clients = $this->clientMapper->findActiveForCurrentUser("created", true);
 		$projects = $this->projectMapper->findActiveForCurrentUser("created", true);
 		$sharedBy = null;
@@ -746,7 +783,7 @@ class PageController extends Controller {
 			}
 		}
 
-		$urlGenerator = \OC::$server->getURLGenerator();
+		
 		$requestToken = \OC::$server->getSession() ? \OCP\Util::callRegister() : "";
 		$l = \OC::$server->getL10N("timemanager");
 
@@ -754,9 +791,9 @@ class PageController extends Controller {
 		$project_name = isset($project_data) && count($project_data) > 0 ? $project_data[0]->getName() : "";
 
 		$form_props = [
-			"action" => $urlGenerator->linkToRoute("timemanager.page.tasks") . "?project=" . $project_uuid,
-			"editAction" => $urlGenerator->linkToRoute("timemanager.page.projects"),
-			"settingsAction" => $urlGenerator->linkToRoute("timemanager.page.updateSettings"),
+			"action" => $this->urlGenerator->linkToRoute("timemanager.page.tasks") . "?project=" . $project_uuid,
+			"editAction" => $this->urlGenerator->linkToRoute("timemanager.page.projects"),
+			"settingsAction" => $this->urlGenerator->linkToRoute("timemanager.page.updateSettings"),
 			"settings" => [
 				"handle_conflicts" =>
 					$this->config->getAppValue("timemanager", "sync_mode", "force_skip_conflict_handling") === "handle_conflicts",
@@ -769,7 +806,7 @@ class PageController extends Controller {
 			"projectUuid" => $project_uuid,
 			"taskEditorButtonCaption" => $l->t("Add task"),
 			"taskEditorCaption" => $l->t("New task"),
-			"deleteAction" => $urlGenerator->linkToRoute("timemanager.page.projects") . "/delete",
+			"deleteAction" => $this->urlGenerator->linkToRoute("timemanager.page.projects") . "/delete",
 			"deleteUuid" => $project_uuid,
 			"deleteButtonCaption" => $l->t("Delete project"),
 			"deleteQuestion" => $l->t("Do you want to delete the project %s and all associated tasks and time entries?", [
@@ -805,7 +842,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function addTask($name, $project) {
+	function addTask($name, $project) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		$this->storageHelper->addOrUpdateObject(
@@ -816,14 +855,16 @@ class PageController extends Controller {
 			],
 			"tasks"
 		);
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.tasks") . "?project=" . $project);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.tasks") . "?project=" . $project);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteTask($uuid, $project) {
+	function deleteTask($uuid, $project) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		// Get task
@@ -840,14 +881,16 @@ class PageController extends Controller {
 			$this->taskMapper->deleteChildrenForEntityById($uuid, $commit);
 		}
 
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.tasks") . "?project=" . $project);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.tasks") . "?project=" . $project);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 */
-	function editTask($uuid, $name = "Unnamed") {
+	function editTask($uuid, $name = "Unnamed") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$task = $this->taskMapper->getActiveObjectById($uuid);
 		if ($task) {
@@ -862,15 +905,18 @@ class PageController extends Controller {
 				"tasks"
 			);
 		}
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $uuid);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $uuid);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function times($task, string $userFilter = "") {
+	function times($task, string $userFilter = "") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
+			
 		$clients = $this->clientMapper->findActiveForCurrentUser("created", true);
 		$projects = $this->projectMapper->findActiveForCurrentUser("created", true);
 		$tasks = $this->taskMapper->findActiveForCurrentUser("created", true);
@@ -929,7 +975,7 @@ class PageController extends Controller {
 		});
 		$hasSharedTimeEntries = count($sharedTimeEntries) > 0;
 
-		$urlGenerator = \OC::$server->getURLGenerator();
+		
 		$requestToken = \OC::$server->getSession() ? \OCP\Util::callRegister() : "";
 		$l = \OC::$server->getL10N("timemanager");
 
@@ -937,9 +983,9 @@ class PageController extends Controller {
 		$task_name = isset($task_data) && count($task_data) > 0 ? $task_data[0]->getName() : "";
 
 		$form_props = [
-			"action" => $urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $task_uuid,
-			"editAction" => $urlGenerator->linkToRoute("timemanager.page.tasks"),
-			"settingsAction" => $urlGenerator->linkToRoute("timemanager.page.updateSettings"),
+			"action" => $this->urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $task_uuid,
+			"editAction" => $this->urlGenerator->linkToRoute("timemanager.page.tasks"),
+			"settingsAction" => $this->urlGenerator->linkToRoute("timemanager.page.updateSettings"),
 			"settings" => [
 				"handle_conflicts" =>
 					$this->config->getAppValue("timemanager", "sync_mode", "force_skip_conflict_handling") === "handle_conflicts",
@@ -955,14 +1001,14 @@ class PageController extends Controller {
 			"editTaskData" => [
 				"name" => $task_name,
 			],
-			"deleteAction" => $urlGenerator->linkToRoute("timemanager.page.tasks") . "/delete",
+			"deleteAction" => $this->urlGenerator->linkToRoute("timemanager.page.tasks") . "/delete",
 			"deleteUuid" => $task_uuid,
 			"deleteButtonCaption" => $l->t("Delete task"),
 			"deleteQuestion" => $l->t("Do you want to delete the task %s and all associated time entries?", [$task_name]),
-			"deleteTimeEntryAction" => $urlGenerator->linkToRoute("timemanager.page.times") . "/delete",
+			"deleteTimeEntryAction" => $this->urlGenerator->linkToRoute("timemanager.page.times") . "/delete",
 			"timeEditorButtonCaption" => $l->t("Add time entry"),
 			"timeEditorCaption" => $l->t("New time entry"),
-			"editTimeEntryAction" => $urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $task_uuid,
+			"editTimeEntryAction" => $this->urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $task_uuid,
 			"sharedBy" => $sharedBy,
 			"sharees" => $sharees,
 			"canEdit" => $sharedBy === null,
@@ -994,7 +1040,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function addTime($duration, $date, $note, $task) {
+	function addTime($duration, $date, $note, $task) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		// Convert 1,25 to 1.25
@@ -1019,14 +1067,16 @@ class PageController extends Controller {
 			],
 			"times"
 		);
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $task);
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $task);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteTime($uuid) {
+	function deleteTime($uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$time = $this->storageHelper->getTimeEntryByIdForEditing($uuid);
 		if ($time) {
 			$commit = UUID::v4();
@@ -1040,9 +1090,9 @@ class PageController extends Controller {
 			// Delete children
 			$this->timeMapper->deleteChildrenForEntityById($uuid, $commit);
 
-			$urlGenerator = \OC::$server->getURLGenerator();
+			
 			return new RedirectResponse(
-				$urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $time->getTaskUuid()
+				$this->urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $time->getTaskUuid()
 			);
 		}
 
@@ -1052,7 +1102,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function editTime($uuid, $duration, $date, $note) {
+	function editTime($uuid, $duration, $date, $note) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$time = $this->storageHelper->getTimeEntryByIdForEditing($uuid);
 		if ($time) {
 			$commit = UUID::v4();
@@ -1091,9 +1143,9 @@ class PageController extends Controller {
 			$time->setNote($note); // date + duration
 			$this->timeMapper->update($time);
 
-			$urlGenerator = \OC::$server->getURLGenerator();
+			
 			return new RedirectResponse(
-				$urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $time->getTaskUuid()
+				$this->urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $time->getTaskUuid()
 			);
 		}
 
@@ -1103,7 +1155,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function payTime($uuid) {
+	function payTime($uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$time = $this->storageHelper->getTimeEntryByIdForEditing($uuid);
 		if ($time) {
 			$commit = UUID::v4();
@@ -1114,9 +1168,9 @@ class PageController extends Controller {
 			$time->setPaymentStatus("paid");
 			$this->timeMapper->update($time);
 
-			$urlGenerator = \OC::$server->getURLGenerator();
+			
 			return new RedirectResponse(
-				$urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $time->getTaskUuid()
+				$this->urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $time->getTaskUuid()
 			);
 		}
 
@@ -1126,7 +1180,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function unpayTime($uuid) {
+	function unpayTime($uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$time = $this->storageHelper->getTimeEntryByIdForEditing($uuid);
 		if ($time) {
 			$commit = UUID::v4();
@@ -1137,9 +1193,9 @@ class PageController extends Controller {
 			$time->setPaymentStatus("");
 			$this->timeMapper->update($time);
 
-			$urlGenerator = \OC::$server->getURLGenerator();
+			
 			return new RedirectResponse(
-				$urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $time->getTaskUuid()
+				$this->urlGenerator->linkToRoute("timemanager.page.times") . "?task=" . $time->getTaskUuid()
 			);
 		}
 
@@ -1149,27 +1205,31 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function updateSettings($handle_conflicts) {
+	function updateSettings($handle_conflicts) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$this->config->setAppValue(
 			"timemanager",
 			"sync_mode",
 			(bool) $handle_conflicts ? "handle_conflicts" : "force_skip_conflict_handling"
 		);
-		$urlGenerator = \OC::$server->getURLGenerator();
-		return new RedirectResponse($urlGenerator->linkToRoute("timemanager.page.index"));
+		
+		return new RedirectResponse($this->urlGenerator->linkToRoute("timemanager.page.index"));
 	}
 
 	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function tools() {
+	function tools() {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse($this->urlGenerator->getBaseUrl());
 		$all_clients = $this->clientMapper->findActiveForCurrentUser("name");
 		$all_projects = $this->projectMapper->findActiveForCurrentUser("name");
 		$all_tasks = $this->taskMapper->findActiveForCurrentUser("name");
 		$all_times = $this->timeMapper->findActiveForCurrentUser();
 
-		$urlGenerator = \OC::$server->getURLGenerator();
+		
 		$requestToken = \OC::$server->getSession() ? \OCP\Util::callRegister() : "";
 
 		$store = [
@@ -1177,11 +1237,11 @@ class PageController extends Controller {
 			"projects" => $all_projects,
 			"tasks" => $all_tasks,
 			"times" => $all_times,
-			"action" => $urlGenerator->linkToRoute("timemanager.page.tools"),
-			"syncApiUrl" => $urlGenerator->linkToRoute("timemanager.t_api.updateObjectsFromWeb"),
+			"action" => $this->urlGenerator->linkToRoute("timemanager.page.tools"),
+			"syncApiUrl" => $this->urlGenerator->linkToRoute("timemanager.t_api.updateObjectsFromWeb"),
 			"requestToken" => $requestToken,
 			"isServer" => true,
-			// "settingsAction" => $urlGenerator->linkToRoute("timemanager.page.updateSettings"),
+			// "settingsAction" => $this->urlGenerator->linkToRoute("timemanager.page.updateSettings"),
 			// "settings" => [
 			// 	"handle_conflicts" =>
 			// 		$this->config->getAppValue("timemanager", "sync_mode", "force_skip_conflict_handling") ===

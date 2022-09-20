@@ -89,7 +89,9 @@ class TApiController extends ApiController {
 	 * @param string $note the note of the item
 	 * @return DataResponse
 	 */
-	function post($name, $note) {
+	function post($name, $note) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return;
 		$client = new Client();
 		$client->setName($name);
 		$client->setNote($note);
@@ -105,7 +107,9 @@ class TApiController extends ApiController {
 	 * @param json $data
 	 * @return DataResponse
 	 */
-	function updateObjectsFromWeb($data, $lastCommit) {
+	function updateObjectsFromWeb($data, $lastCommit) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return;
 		return $this->updateObjects($data, $lastCommit);
 	}
 
@@ -117,7 +121,9 @@ class TApiController extends ApiController {
 	 * @param json $data
 	 * @return DataResponse
 	 */
-	function updateObjects($data, $lastCommit) {
+	function updateObjects($data, $lastCommit) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return;
 		$logger = \OC::$server->getLogger();
 		$logger->debug("New API request:", ["app" => "timemanager"]);
 		$logger->debug(json_encode($data), ["app" => "timemanager"]);
@@ -236,7 +242,9 @@ class TApiController extends ApiController {
 		string $status = null,
 		$shared = false,
 		string $userFilter = ""
-	) {
+	) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return;
 		// Get possible task ids to filters for
 		$filter_tasks = $this->storageHelper->getTaskListFromFilters($clients, $projects, $tasks, $shared);
 
