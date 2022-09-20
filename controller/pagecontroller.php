@@ -95,8 +95,8 @@ class PageController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	function index(string $userFilter = "") {
-		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
-			return;
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))		
+			return new RedirectResponse('/apps/adminly_dashboard');
 
 		// Find the latest time entries
 		$times = $this->timeMapper->findActiveForCurrentUser("start", true, "DESC");
@@ -172,8 +172,8 @@ class PageController extends Controller {
 		string $format = "none",
 		string $userFilter = ""
 	) {		
-		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
-			return;
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 
 		$start_of_month = new \DateTime("first day of this month");
 		$end_of_month = new \DateTime("last day of this month");
@@ -330,8 +330,8 @@ class PageController extends Controller {
 	 * @NoCSRFRequired
 	 */
 	function clients() {		
-		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
-			return;
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 
 		$clients = $this->clientMapper->findActiveForCurrentUser("name", true);
 
@@ -393,7 +393,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function addClient($name = "Unnamed", $note = "") {
+	function addClient($name = "Unnamed", $note = "") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		$this->storageHelper->addOrUpdateObject(
@@ -411,7 +413,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteClient($uuid) {
+	function deleteClient($uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		// Get client
@@ -432,7 +436,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function editClient($uuid, $name = "Unnamed", $note = "") {
+	function editClient($uuid, $name = "Unnamed", $note = "") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$client = $this->clientMapper->getActiveObjectById($uuid);
 		if ($client) {
@@ -455,7 +461,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function addClientShare($client_uuid, $user_id) {
+	function addClientShare($client_uuid, $user_id) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$client = $this->clientMapper->getActiveObjectById($client_uuid);
 		// User must be author if we can get the client
 		if ($client) {
@@ -478,7 +486,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteClientShare($uuid, $client_uuid) {
+	function deleteClientShare($uuid, $client_uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$shares = $this->shareMapper->findByUuid($uuid);
 		if (count($shares) > 0) {
 			$this->shareMapper->delete($shares[0]);
@@ -492,9 +502,9 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function projects($client = null) {		
-		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
-			return;
+	function projects($client = null) {				
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 
 		$clients = $this->clientMapper->findActiveForCurrentUser("created", true);
 		$isSingleClient = false;
@@ -617,7 +627,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function addProject($name, $client) {
+	function addProject($name, $client) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		$this->storageHelper->addOrUpdateObject(
@@ -635,7 +647,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteProject($uuid, $client) {
+	function deleteProject($uuid, $client) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		// Get client
@@ -659,7 +673,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function editProject($uuid, $name = "Unnamed") {
+	function editProject($uuid, $name = "Unnamed") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$project = $this->projectMapper->getActiveObjectById($uuid);
 		if ($project) {
@@ -682,9 +698,9 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function tasks($project) {
-		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
-			return;
+	function tasks($project) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 
 		$clients = $this->clientMapper->findActiveForCurrentUser("created", true);
 		$projects = $this->projectMapper->findActiveForCurrentUser("created", true);
@@ -820,7 +836,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function addTask($name, $project) {
+	function addTask($name, $project) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		$this->storageHelper->addOrUpdateObject(
@@ -838,7 +856,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteTask($uuid, $project) {
+	function deleteTask($uuid, $project) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		// Get task
@@ -862,7 +882,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function editTask($uuid, $name = "Unnamed") {
+	function editTask($uuid, $name = "Unnamed") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$task = $this->taskMapper->getActiveObjectById($uuid);
 		if ($task) {
@@ -885,9 +907,9 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function times($task, string $userFilter = "") {
-		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))
-			return;
+	function times($task, string $userFilter = "") {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 			
 		$clients = $this->clientMapper->findActiveForCurrentUser("created", true);
 		$projects = $this->projectMapper->findActiveForCurrentUser("created", true);
@@ -1012,7 +1034,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function addTime($duration, $date, $note, $task) {
+	function addTime($duration, $date, $note, $task) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$commit = UUID::v4();
 		$this->storageHelper->insertCommit($commit);
 		// Convert 1,25 to 1.25
@@ -1044,7 +1068,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function deleteTime($uuid) {
+	function deleteTime($uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$time = $this->storageHelper->getTimeEntryByIdForEditing($uuid);
 		if ($time) {
 			$commit = UUID::v4();
@@ -1070,7 +1096,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function editTime($uuid, $duration, $date, $note) {
+	function editTime($uuid, $duration, $date, $note) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$time = $this->storageHelper->getTimeEntryByIdForEditing($uuid);
 		if ($time) {
 			$commit = UUID::v4();
@@ -1121,7 +1149,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function payTime($uuid) {
+	function payTime($uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$time = $this->storageHelper->getTimeEntryByIdForEditing($uuid);
 		if ($time) {
 			$commit = UUID::v4();
@@ -1144,7 +1174,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function unpayTime($uuid) {
+	function unpayTime($uuid) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$time = $this->storageHelper->getTimeEntryByIdForEditing($uuid);
 		if ($time) {
 			$commit = UUID::v4();
@@ -1167,7 +1199,9 @@ class PageController extends Controller {
 	/**
 	 * @NoAdminRequired
 	 */
-	function updateSettings($handle_conflicts) {
+	function updateSettings($handle_conflicts) {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$this->config->setAppValue(
 			"timemanager",
 			"sync_mode",
@@ -1181,7 +1215,9 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	function tools() {
+	function tools() {		
+		if(\OC::$server->getGroupManager()->isInGroup($this->userId, "provider"))	
+			return new RedirectResponse('/apps/adminly_dashboard');
 		$all_clients = $this->clientMapper->findActiveForCurrentUser("name");
 		$all_projects = $this->projectMapper->findActiveForCurrentUser("name");
 		$all_tasks = $this->taskMapper->findActiveForCurrentUser("name");
