@@ -644,7 +644,8 @@ label {
 	}
 
 	#app-navigation {
-		margin-top: 6px !important;
+		top: 56px;
+		height: calc(100% - 56px);
 	}
 }
 
