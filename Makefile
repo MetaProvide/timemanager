@@ -11,7 +11,7 @@ all: dev-setup build-js-production
 
 release: npm-init build-js-production build-tarball
 # Dev env management
-dev-setup: clean clean-dev npm-init
+dev-setup: clean-dev npm-init
 
 # Dependencies
 npm-init:
@@ -28,9 +28,6 @@ build-js-production:
 	npm run build
 
 # Cleaning
-clean:
-	rm -rf js/*
-
 clean-dev:
 	rm -rf node_modules
 
