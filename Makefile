@@ -36,6 +36,7 @@ build-tarball:
 	mkdir -p $(temp_build_directory)
 	rsync -a \
 	--exclude=".git" \
+	--exclude="build" \
 	--exclude="node_modules" \
 	--exclude="tests" \
 	--exclude=".babelrc" \
