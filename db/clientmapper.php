@@ -43,4 +43,16 @@ class ClientMapper extends ObjectMapper {
 		}
 		return $sum;
 	}
+	
+	/**
+	 * remove all clients with status deleted
+	 *
+	 */
+	public function cleanUp() {
+		$qb = $this->db->getQueryBuilder();
+		$qb
+			->delete($this->tableName)
+			->where($qb->expr()->eq('status', $qb->createNamedParameter('deleted')));
+		$qb->executeStatement();
+	}
 }

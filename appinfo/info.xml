@@ -47,7 +47,7 @@ _Please refer to the [full changelog](https://github.com/te-online/timemanager/#
 			<order>4</order>
 		</navigation>
 	</navigations>
-	  <background-jobs>
-    <job>OCA\TimeManager\BackgroundJob\CleanupStatusDeleted</job>
-  </background-jobs>
+	<background-jobs>
+    	<job>OCA\TimeManager\BackgroundJob\CleanupStatusDeleted</job>
+  	</background-jobs>
 </info>

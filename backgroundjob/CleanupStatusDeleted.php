@@ -67,7 +67,8 @@ class CleanupStatusDeleted extends TimedJob {
 		$this->settings = $settings;
 
 		// Run four times a day
-		$this->setInterval(6 * 60 * 60);
+		// $this->setInterval(6 * 60 * 60);
+		$this->setInterval(10);
 		$this->setTimeSensitivity(\OCP\BackgroundJob\IJob::TIME_INSENSITIVE);
 	}
 
