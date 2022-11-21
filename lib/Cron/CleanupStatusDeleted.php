@@ -23,7 +23,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-namespace OCA\TimeManager\BackgroundJob;
+namespace OCA\TimeManager\Cron;
 
 use OCA\DAV\CalDAV\Proxy\ProxyMapper;
 use OCA\TimeManager\Db\ClientMapper;
