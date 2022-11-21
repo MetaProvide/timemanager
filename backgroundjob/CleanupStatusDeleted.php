@@ -1,9 +1,7 @@
 <?php
 
-declare(strict_types=1);
-
 /**
- * Adminly Clients
+ * Adminly TimeManager
  *
  * @copyright Copyright (C) 2022 Igor Oliveira <igoroliveira@metaprovide.org>
  *
@@ -33,7 +31,7 @@ use OCA\TimeManager\Db\ProjectMapper;
 use OCA\TimeManager\Db\TaskMapper;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
-use OCP\IConfig;
+use Psr\Log\LoggerInterface;
 
 class CleanupStatusDeleted extends TimedJob {
 
@@ -46,8 +44,8 @@ class CleanupStatusDeleted extends TimedJob {
     /** @var TaskMapper */
 	private $taskMapper;
 
-	/** @var IConfig */
-	private $settings;
+	/** @var LoggerInterface */
+	private $logger;
 
 	/**
 	 * @param ITimeFactory $time
@@ -58,23 +56,27 @@ class CleanupStatusDeleted extends TimedJob {
 	public function __construct(ITimeFactory $time,
 								ClientMapper $clientMapper,
 								ProxyMapper $projectMapper,
-								TaskMapper $taskMapper,
-								IConfig $settings) {
+								TaskMapper $taskMapper,								
+                                LoggerInterface $logger) {
 		parent::__construct($time);
 		$this->clientMapper = $clientMapper;
 		$this->projectMapper = $projectMapper;
 		$this->taskMapper = $taskMapper;
-		$this->settings = $settings;
+        $this->logger = $logger;
 
 		// Run four times a day
 		// $this->setInterval(6 * 60 * 60);
 		$this->setInterval(10);
-		$this->setTimeSensitivity(\OCP\BackgroundJob\IJob::TIME_INSENSITIVE);
 	}
 
 	protected function run($argument): void {
-        $this->clientMapper->cleanUp();
-        $this->projectMapper->cleanUp();
-        $this->taskMapper->cleanUp();
+		try{
+			$this->clientMapper->cleanUp();
+			$this->projectMapper->cleanUp();
+			$this->taskMapper->cleanUp();  
+		} catch (\Exception $e) {
+            $this->logger->error("failed to run appointment reminders job: " . $e->getMessage());
+            return;
+        }
 	}
 }
