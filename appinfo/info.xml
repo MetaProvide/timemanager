@@ -40,7 +40,7 @@ _Please refer to the [full changelog](https://github.com/te-online/timemanager/#
 		<nextcloud min-version="13" max-version="24" />
 	</dependencies>
 	<background-jobs>
-    	<job>OCA\TimeManager\Cron\CleanupStatusDeleted</job>
+    	<job>OCA\TimeManager\BackgroundJob\CleanupStatusDeleted</job>
   	</background-jobs>
 	<navigations>
 		<navigation>
